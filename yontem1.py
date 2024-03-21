@@ -1,30 +1,41 @@
 import cv2
 import dlib
+import os
+import numpy as np
 
-# Dosya yolunu bir değişkende sakla
-image_path = '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part1/1_0_0_20161219140623097.jpg'
+# Dlib yükler
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
-# Görüntüyü yükle
-image = cv2.imread(image_path)
+# Resimlerin bulunduğu klasör yolu, sonrasında bütün klasörler için güncellenecek
+folder_path = '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part1/'
 
-if image is None:
-    print(f"Dosya yolu doğru ancak dosya okunamıyor veya bulunamıyor: {image_path}")
-else:
-    # Gürültüyü azalt
-    blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
+# Özellik vektörleri ve yaş etiketleri için boş listeler oluştur
+feature_vectors = []
+age_labels = []
 
-    # Yüz tespit ediciyi yükle
-    detector = dlib.get_frontal_face_detector()
+# Klasördeki tüm resim dosyaları için, sonrasında farklı klasörler de eklenecek
+for image_file in os.listdir(folder_path):
+    if image_file.endswith('.jpg'):
+        # Resim dosya yolu
+        image_path = os.path.join(folder_path, image_file)
 
-    # Yüzleri tespit et
-    detected_faces = detector(blurred_image, 1)
+        # Resimi okur ve griye çevirir
+        image = cv2.imread(image_path)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Tespit edilen yüzlerin etrafına dikdörtgen çiz
-    for face in detected_faces:
-        x, y, w, h = face.left(), face.top(), face.width(), face.height()
-        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        # Yüzleri tespit eder
+        faces = detector(gray, 1)
 
-    # Görüntüyü göster
-    cv2.imshow('Detected Faces', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        for face in faces:
+            # Landmark'ları bulur
+            landmarks = predictor(gray, face)
+
+            # Gözler arası mesafe ve ağız genişliği özelliklerini hesaplar
+            eye_distance = np.linalg.norm(np.array([landmarks.part(36).x, landmarks.part(36).y]) - np.array([landmarks.part(45).x, landmarks.part(45).y]))
+            mouth_width = np.linalg.norm(np.array([landmarks.part(48).x, landmarks.part(48).y]) - np.array([landmarks.part(54).x, landmarks.part(54).y]))
+
+            # Özellik vektörünü ve yaş etiketini saklar
+            feature_vectors.append([eye_distance, mouth_width])
+            age_labels.append(int(image_file.split('_')[0]))
+
