@@ -38,4 +38,3 @@ for image_file in os.listdir(folder_path):
             # Özellik vektörünü ve yaş etiketini saklar
             feature_vectors.append([eye_distance, mouth_width])
             age_labels.append(int(image_file.split('_')[0]))
-
