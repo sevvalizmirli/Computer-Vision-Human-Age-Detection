@@ -24,18 +24,18 @@ def extract_lbp_features(image, P=8, R=1):
     hist = hist.astype("float")
     hist /= (hist.sum() + 1e-7)
     return hist
-i = 0 #hangileri okunamıyor tespit eder
-# Klasördeki bütün resimler için
+i = 0 
+
 for image_file in os.listdir(folder_path):
     if image_file.endswith('.jpg'):
     
         image_path = os.path.join(folder_path, image_file)
 
-        # Griye çevirme
+       
         image = cv2.imread(image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Yüzleri tespiti
+        
         faces = detector(gray, 1)
         i = i + 1
         if len(faces) == 0:

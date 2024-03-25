@@ -71,7 +71,7 @@ print(f"Atlanan dosya sayısı: {skipped_count}")
 feature_vectors = np.array(feature_vectors)
 age_labels = np.array(age_labels)
 
-# Veri normalizasyonu
+# Veri normalizasyonu yapar
 scaler = StandardScaler()
 feature_vectors_scaled = scaler.fit_transform(feature_vectors)
 
