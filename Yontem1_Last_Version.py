@@ -10,10 +10,10 @@ import matplotlib.gridspec as gridspec
 import random
 import joblib
 
-
-# Veri seti yolları burada sadece 3 klasör kullandım yaklaşık 24k veri
 folder_paths = [
-    '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part5/'
+    '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part1/',
+    '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part2/',
+    '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part3/'
 ]
 
 def preprocess_image(image_path):
@@ -63,26 +63,24 @@ feature_vectors = np.array(feature_vectors)
 age_labels = np.array(age_labels)
 image_paths = np.array(image_paths)  
 
-X_train, X_test, y_train, y_test, X_train_paths, X_test_paths = train_test_split(feature_vectors, age_labels, image_paths, test_size=0.2, random_state=42)
+# Veriyi eğitim, doğrulama ve test setlerine ayırma
+X_train, X_test, y_train, y_test, train_paths, test_paths = train_test_split(feature_vectors, age_labels, image_paths, test_size=0.3, random_state=42)
+X_val, X_test, y_val, y_test, val_paths, test_paths = train_test_split(X_test, y_test, test_paths, test_size=0.5, random_state=42)
 
 flann = NearestNeighbors(n_neighbors=3, algorithm='auto').fit(X_train)
 predicted_ages = [y_train[flann.kneighbors([x], return_distance=False)[0]].mean() for x in X_test]
 
+joblib.dump(flann, '/home/sevvalizmirli/Desktop/Computer Vision/Github/Computer-Vision-Human-Age-Detection/flann_model.joblib')
 
-joblib.dump(flann, '/home/sevvalizmirli/Desktop/Computer Vision/Github/Computer-Vision-Human-Age-Detection/model1.joblib')
-
-# Doğru tahmin oranını hesaplar
 correct_within_5_years = sum(abs(a - p) <= 5 for a, p in zip(y_test, predicted_ages))
 accuracy_within_5_years = correct_within_5_years / len(y_test) * 100
 print(f"Doğruluk oranı (±5 yaş): {accuracy_within_5_years:.2f}%")
 
-# MAE ve MSE'yi hesaplar
 updated_mae = np.mean([abs(a - p) if abs(a - p) <= 5 else 0 for a, p in zip(y_test, predicted_ages)])
 updated_mse = np.mean([(a - p) ** 2 if abs(a - p) <= 5 else 0 for a, p in zip(y_test, predicted_ages)])
 print(f"Ortalama Mutlak Hata (MAE): {updated_mae:.2f}")
 print(f"Ortalama Kare Hata (MSE): {updated_mse:.2f}")
 
-# Görselleri ve tahminleri gösterir, tek tek yerine hepsini tek seferde bastım
 def plot_sample_images(image_paths, predicted_ages, actual_ages, rows=4, cols=5):
     fig, axs = plt.subplots(rows, cols, figsize=(15, 10))
     for ax, img_path, pred, actual in zip(axs.flat, image_paths, predicted_ages, actual_ages):
@@ -92,13 +90,11 @@ def plot_sample_images(image_paths, predicted_ages, actual_ages, rows=4, cols=5)
         ax.set_title(f"Pred: {pred:.1f}\nActual: {actual}")
         ax.axis('off')
 
-# Test setinden rastgele 20 örnek seçer
-sample_indexes = random.sample(range(len(X_test_paths)), 20)
-sample_image_paths = X_test_paths[sample_indexes]
+sample_indexes = random.sample(range(len(test_paths)), 20)
+sample_image_paths = test_paths[sample_indexes]
 sample_predicted_ages = [predicted_ages[i] for i in sample_indexes]
 sample_actual_ages = [y_test[i] for i in sample_indexes]
 
 plot_sample_images(sample_image_paths, sample_predicted_ages, sample_actual_ages)
 plt.tight_layout()
 plt.show()
-
