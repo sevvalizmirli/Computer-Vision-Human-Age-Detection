@@ -14,9 +14,7 @@ import random
 
 folder_paths = ['/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part1/',
                 '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part2/',
-                '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part3/'
-                
-                ]
+                '/home/sevvalizmirli/Desktop/Computer Vision/Dataset/UTKFace_part3/']
 
 def load_images_and_labels(paths, img_size=(128, 128)):
     counter = 0
@@ -48,10 +46,12 @@ def load_images_and_labels(paths, img_size=(128, 128)):
     return np.array(hog_features), np.array(ages)
 
 hog_features, ages = load_images_and_labels(folder_paths)
-X_train_val, X_test, y_train_val, y_test = train_test_split(hog_features, ages, test_size=0.2, random_state=42)
-X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.25, random_state=42)
 
-pca = PCA(n_components=28)
+# Veri setini eğitim, doğrulama ve test setlerine ayırma işlemini güncelle
+X_train, X_test, y_train, y_test = train_test_split(hog_features, ages, test_size=0.3, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=42)
+
+pca = PCA(n_components=150)
 X_train_pca = pca.fit_transform(X_train)
 X_val_pca = pca.transform(X_val)
 X_test_pca = pca.transform(X_test)
